@@ -9,17 +9,21 @@
 #include "utils.h"
 #include "window.h"
 #include "scene.h"
-
+#include "renderer.h"
 namespace Engine {
     class Engine {
         public:
-        static Engine& Instance(const std::string& path = "") {
-            static Engine instance(path);
+        Window* window;
+        static Engine& Instance() {
+            static Engine instance("");
             return instance;
+        }
+        static void Initialize(const std::string& path) {
+            Instance().changeCurrentScene(path);
         }
         ~Engine();
         void changeCurrentScene(std::string path);
-        void runUpdateLoop(Window window);
+        void runUpdateLoop();
         void exit();
         void start();
         private:

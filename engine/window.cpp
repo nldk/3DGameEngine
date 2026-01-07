@@ -30,7 +30,6 @@ void Engine::Window::update() {
     glfwPollEvents();
     if (glfwWindowShouldClose(window)) {
         Engine::Engine::Instance().exit();
-        destroy();
     }
 }
 

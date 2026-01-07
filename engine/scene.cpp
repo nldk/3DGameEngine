@@ -36,7 +36,7 @@ void Engine::Scene::enterScene() {
 }
 void Engine::Scene::updateScene(double delta) {
     for (auto& sys: activeSystems) {
-        sys->Update(delta);
+        sys->RunUpdates(delta);
     }
 }
 void Engine::Scene::exitScene() {

@@ -11,8 +11,18 @@
 
 class System {
 public:
-    virtual void Update(double delta){};
+    using UpdateFn = std::function<void(double)>;
+
     virtual ~System() = default;
+
+    void RunUpdates(double delta) {
+        for (auto& fn : updateVec) {
+            fn(delta);
+        }
+    }
+
+protected:
+    std::vector<UpdateFn> updateVec;
 };
 
 class ClassRegistry {
@@ -48,4 +58,8 @@ static ClassRegistrar _registrar_##TYPE(                  \
 []() -> System* { return new TYPE(); }                \
 )
 
+#define REGISTER_UPDATE(FN)                                      \
+updateVec.push_back(                                           \
+[this](double dt) { this->FN(dt); }                        \
+)
 #endif //NIELS3DGAMEENGINE_CLASSREGISTARION_H

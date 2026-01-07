@@ -19,6 +19,8 @@ add_executable(Niels3DGameEngine game/test.cpp
         engine/scene.cpp
         engine/scene.h
         engine/engine.cpp
+        engine/renderer.cpp
+        engine/renderer.h
 )
 target_include_directories(Niels3DGameEngine PRIVATE
         ${CMAKE_SOURCE_DIR}/glad

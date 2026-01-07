@@ -23,6 +23,7 @@ void Engine::Engine::start() {
 }
 
 void Engine::Engine::exit() {
+    window->destroy();
     running = false;
 }
 
@@ -31,7 +32,7 @@ Engine::Engine::~Engine() {
     currentScene = nullptr;
 }
 
-void Engine::Engine::runUpdateLoop(Window win) {
+void Engine::Engine::runUpdateLoop() {
     float currentFrame = static_cast<float>(glfwGetTime());
 
     // Calculate delta time
@@ -39,8 +40,8 @@ void Engine::Engine::runUpdateLoop(Window win) {
     lastFrame = currentFrame;
     while (running) {
         currentScene->updateScene(deltaTime);
-        win.update();
+        window->update();
 
-        win.clearGLCollorBit();
+        window->clearGLCollorBit();
     }
 }

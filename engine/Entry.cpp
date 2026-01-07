@@ -13,7 +13,7 @@
 
 #define WIDHT 500
 #define HEIGHT 500
-const std::string gamePath = "../game/";\
+const std::string gamePath = "/home/niel/CLionProjects/Niels3DGameEngine/game/";\
 
 
 int main() {
@@ -46,7 +46,7 @@ int main() {
         std::cout << "init class not found" << std::endl;
         throw std::runtime_error("init class not found");
     }
-    Engine::Window win = Engine::Window(WindowStartupConfig::width, WindowStartupConfig::height, WindowStartupConfig::title.c_str(),3,3);
+    Engine::Window* win = new Engine::Window(WindowStartupConfig::width, WindowStartupConfig::height, WindowStartupConfig::title.c_str(),3,3);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
@@ -54,11 +54,11 @@ int main() {
         return -1;
     }
 
-    win.setGLViewport(0,0,WIDHT,HEIGHT);
-    win.background = Engine::Vec4(0.2f, 0.3f, 0.3f, 1.0f);
-    Engine::Engine::Instance(gamePath + "testScene.scene");
+    win->setGLViewport(0,0,WIDHT,HEIGHT);
+    win->background = Engine::Vec4(0.2f, 0.3f, 0.3f, 1.0f);
+    Engine::Engine::Instance().window = win;
+    Engine::Engine::Initialize(gamePath + "testScene.scene");
     Engine::Engine::Instance().start();
-    Engine::Engine::Instance().runUpdateLoop(win);
-    win.destroy();
+    Engine::Engine::Instance().runUpdateLoop();
     glfwTerminate();
 }
