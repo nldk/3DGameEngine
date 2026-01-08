@@ -1,1 +1,3 @@
 *.h linguist-language=C++
+glad/** linguist-vendored
+glwf3-14 linguist-vendored
