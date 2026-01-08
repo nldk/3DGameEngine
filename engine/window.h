@@ -26,9 +26,9 @@ namespace Engine {
     private:
         int viewportX,viewportY;
         static void framebufferSizeCallback(GLFWwindow* window, int width, int height) {
-        auto* self = static_cast<Engine::Window*>(glfwGetWindowUserPointer(window));
-        if (!self) return;
-        self->resize(self->viewportX,self->viewportY , width, height);
+            auto* self = static_cast<Engine::Window*>(glfwGetWindowUserPointer(window));
+            if (!self) return;
+            self->resize(self->viewportX,self->viewportY , width, height);
         };
     };
 }

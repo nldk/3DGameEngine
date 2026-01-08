@@ -10,6 +10,8 @@
 #include "window.h"
 #include "scene.h"
 #include "renderer.h"
+#include "stb_image.h"
+#include "glm-1.0.3/glm/glm.hpp"
 namespace Engine {
     class Engine {
         public:

@@ -1,3 +1,4 @@
 *.h linguist-language=C++
 glad/** linguist-vendored
 glfw-3.4/** linguist-vendored
+engine/glm-1.0.3/** linguist-vendored

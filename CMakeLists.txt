@@ -21,6 +21,7 @@ add_executable(Niels3DGameEngine game/test.cpp
         engine/engine.cpp
         engine/renderer.cpp
         engine/renderer.h
+        engine/stb_image.h
 )
 target_include_directories(Niels3DGameEngine PRIVATE
         ${CMAKE_SOURCE_DIR}/glad

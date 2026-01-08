@@ -6,7 +6,7 @@
 #define NIELS3DGAMEENGINE_RENDERER_H
 
 #include <glad/glad.h>
-
+#include "engine.h"
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -14,6 +14,7 @@
 #include <vector>
 
 namespace Engine {
+    class Texture;
     class Shader {
     public:
         unsigned int shader;
@@ -74,11 +75,20 @@ namespace Engine {
         Renderer(ShaderProgram* shaderProgram);
         void loadData(float *vertex, int vertexCount, unsigned int* indices, int indexCount);
         void setVAtributes(int layout, unsigned int size, GLenum type, GLboolean normalize, unsigned int stride, unsigned int offset);
-        void render(unsigned int start, unsigned int count, GLenum type);
+        void render(unsigned int start, unsigned int count,GLenum type,Texture* tex);
         private:
         unsigned int VBO;
         unsigned int VAO;
         unsigned int EBO;
+    };
+
+    class Texture {
+        public:
+        unsigned int ID;
+        int width, height, nrChannels;
+        unsigned char *data;
+        Texture(std::string filePath);
+        ~Texture();
     };
 }
 

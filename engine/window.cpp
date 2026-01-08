@@ -22,6 +22,7 @@ Engine::Window::Window(int width, int height, const char *title, int gl_version_
     }
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+    glfwSetWindowUserPointer(window, this);
 }
 
 void Engine::Window::update() {

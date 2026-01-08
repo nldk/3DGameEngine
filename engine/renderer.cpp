@@ -102,10 +102,11 @@ Engine::Shader::Shader(const char* shaderPath,const int shaderType,std::string n
 Engine::Renderer::Renderer(ShaderProgram *shaderProgram) {
     this->shaderProgram = shaderProgram;
 }
-void Engine::Renderer::render(unsigned int start, unsigned int count, GLenum type) {
+void Engine::Renderer::render(unsigned int start, unsigned int count,GLenum type,Texture* tex) {
     shaderProgram->use();
+    glBindTexture(GL_TEXTURE_2D, tex->ID);
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, (void*)(start * sizeof(unsigned int)));
+    glDrawElements(type, count, GL_UNSIGNED_INT, (void*)(start * sizeof(unsigned int)));
 }
 
 void Engine::Renderer::setVAtributes(int layout, unsigned int size, GLenum type, GLboolean normalize, unsigned int stride, unsigned int offset) {
@@ -130,4 +131,25 @@ void Engine::Renderer::loadData(float *vertex, int vertexCount, unsigned int* in
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indexCount, indices, GL_STATIC_DRAW);
+}
+
+Engine::Texture::Texture(std::string filePath) {
+    data = stbi_load(filePath.c_str(),&width,&height,&nrChannels,0);
+    if (!data) {
+        std::cout << "ERROR::STBI::LOADING_FAILED\n" << stbi_failure_reason();
+        return;
+    }
+    glGenTextures(1, &ID);
+    glBindTexture(GL_TEXTURE_2D, ID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width,height,0,GL_RGB,GL_UNSIGNED_BYTE,data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+}
+
+Engine::Texture::~Texture() {
+    stbi_image_free(data);
 }

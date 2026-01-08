@@ -2,6 +2,8 @@
 // Created by niel on 1/6/26.
 //
 #include "engine.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 Engine::Engine::Engine(const std::string& path) {
     running = false;
