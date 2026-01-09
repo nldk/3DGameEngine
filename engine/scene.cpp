@@ -6,13 +6,18 @@
 #include <fstream>
 #include <iostream>
 
-Engine::Scene::Scene(std::string scenePath) {
-    scenePath = scenePath;
+Engine::Scene::Scene(const std::string& scenePath) {
+    // assign the incoming path to the member variable
+    std::cout << "Scene created with path " << scenePath << "\n";
+    if (scenePath.empty()) {
+        return;
+    }
+    this->scenePath = scenePath;
 
-    std::ifstream file(scenePath); // Open the file
+    std::ifstream file(this->scenePath); // Open the file
 
     if (!file.is_open()) { // Check if the file opened successfully
-        std::cerr << "Failed to open file.\n";
+        std::cerr << "Failed to open file: " << this->scenePath << "\n";
         return;
     }
 

@@ -104,6 +104,7 @@ Engine::Renderer::Renderer(ShaderProgram *shaderProgram) {
 }
 void Engine::Renderer::render(unsigned int start, unsigned int count,GLenum type,Texture* tex) {
     shaderProgram->use();
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex->ID);
     glBindVertexArray(VAO);
     glDrawElements(type, count, GL_UNSIGNED_INT, (void*)(start * sizeof(unsigned int)));
@@ -133,9 +134,10 @@ void Engine::Renderer::loadData(float *vertex, int vertexCount, unsigned int* in
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indexCount, indices, GL_STATIC_DRAW);
 }
 
-Engine::Texture::Texture(std::string filePath) {
+Engine::Texture::Texture(std::string filePath, ShaderProgram* shaderProgram) {
     data = stbi_load(filePath.c_str(),&width,&height,&nrChannels,0);
     if (!data) {
+        std::cout << "Error loading texture file " << filePath << std::endl;
         std::cout << "ERROR::STBI::LOADING_FAILED\n" << stbi_failure_reason();
         return;
     }
@@ -147,9 +149,12 @@ Engine::Texture::Texture(std::string filePath) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width,height,0,GL_RGB,GL_UNSIGNED_BYTE,data);
     glGenerateMipmap(GL_TEXTURE_2D);
+    glUniform1i(glGetUniformLocation(shaderProgram->ID, "texture1"), 0);
 
 }
 
 Engine::Texture::~Texture() {
     stbi_image_free(data);
 }
+
+

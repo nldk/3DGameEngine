@@ -12,6 +12,9 @@
 #include "renderer.h"
 #include "stb_image.h"
 #include "glm-1.0.3/glm/glm.hpp"
+#include "glm-1.0.3/glm/gtc/matrix_transform.hpp"
+#include "glm-1.0.3/glm/gtc/type_ptr.hpp"
+const std::string gamePath = "/home/niel/CLionProjects/Niels3DGameEngine/game/";
 namespace Engine {
     class Engine {
         public:
@@ -24,7 +27,7 @@ namespace Engine {
             Instance().changeCurrentScene(path);
         }
         ~Engine();
-        void changeCurrentScene(std::string path);
+        void changeCurrentScene(const std::string& path);
         void runUpdateLoop();
         void exit();
         void start();

@@ -12,6 +12,9 @@
 #include <sstream>
 #include <iostream>
 #include <vector>
+#include "glm-1.0.3/glm/glm.hpp"
+#include  "glm-1.0.3/glm/gtc/matrix_transform.hpp"
+#include "glm-1.0.3/glm/gtc/type_ptr.hpp"
 
 namespace Engine {
     class Texture;
@@ -48,9 +51,6 @@ namespace Engine {
         void compile();
 
         void use();
-
-        // utility uniform functions
-        // ------------------------------------------------------------------------
         void setBool(const std::string &name, bool value) const {
             glUniform1i(glGetUniformLocation(ID, name.c_str()), (int) value);
         }
@@ -64,6 +64,11 @@ namespace Engine {
         void setFloat(const std::string &name, float value) const {
             glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
         }
+        void setUniformMatrix4fv(const std::string &name, glm::mat4 value) {
+            glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
+        };
+        // utility uniform functions
+        // ------------------------------------------------------------------------
 
     private:
         void checkCompileErrors(unsigned int shader, std::string type);
@@ -87,7 +92,7 @@ namespace Engine {
         unsigned int ID;
         int width, height, nrChannels;
         unsigned char *data;
-        Texture(std::string filePath);
+        Texture(std::string filePath, ShaderProgram* shaderProgram);
         ~Texture();
     };
 }

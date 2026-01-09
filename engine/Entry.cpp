@@ -13,7 +13,7 @@
 
 #define WIDHT 500
 #define HEIGHT 500
-const std::string gamePath = "/home/niel/CLionProjects/Niels3DGameEngine/game/";\
+
 
 
 int main() {
@@ -57,7 +57,7 @@ int main() {
     win->setGLViewport(0,0,WIDHT,HEIGHT);
     win->background = Engine::Vec4(0.2f, 0.3f, 0.3f, 1.0f);
     Engine::Engine::Instance().window = win;
-    Engine::Engine::Initialize(gamePath + "testScene.scene");
+    Engine::Engine::Initialize("/home/niel/CLionProjects/Niels3DGameEngine/game/testScene.scene");
     Engine::Engine::Instance().start();
     Engine::Engine::Instance().runUpdateLoop();
     glfwTerminate();

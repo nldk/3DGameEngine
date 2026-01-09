@@ -12,7 +12,7 @@
 namespace Engine {
     class Scene {
         public:
-        Scene(std::string scenePath);
+        Scene(const std::string& scenePath);
         void enterScene();
         void updateScene(double delta);
         void exitScene();
@@ -24,3 +24,4 @@ namespace Engine {
 }
 
 #endif //NIELS3DGAMEENGINE_SCENE_H
+

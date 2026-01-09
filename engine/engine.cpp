@@ -10,7 +10,7 @@ Engine::Engine::Engine(const std::string& path) {
     currentScene = new Scene(path);
 }
 
-auto Engine::Engine::changeCurrentScene(std::string path) -> void {
+auto Engine::Engine::changeCurrentScene(const std::string& path) -> void {
     running = false;
     Scene* newScene = new Scene(path);
     delete currentScene;
@@ -35,15 +35,19 @@ Engine::Engine::~Engine() {
 }
 
 void Engine::Engine::runUpdateLoop() {
-    float currentFrame = static_cast<float>(glfwGetTime());
-
-    // Calculate delta time
-    deltaTime = currentFrame - lastFrame;
-    lastFrame = currentFrame;
     while (running) {
-        currentScene->updateScene(deltaTime);
-        window->update();
+        float currentFrame = static_cast<float>(glfwGetTime());
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
 
-        window->clearGLCollorBit();
+        if (window) {
+            window->clearGLCollorBit();
+        }
+        if (currentScene) {
+            currentScene->updateScene(deltaTime);
+        }
+        if (window) {
+            window->update();
+        }
     }
 }
