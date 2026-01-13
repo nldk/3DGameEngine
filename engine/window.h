@@ -23,6 +23,12 @@ namespace Engine {
         bool isKeyPressed(int key);
         bool isKeyReleased(int key);
         void clearGLCollorBit();
+        int getViewportX() const {;
+            return viewportX;
+        };
+        int getViewportY() const {
+            return viewportY;
+        };
     private:
         int viewportX,viewportY;
         static void framebufferSizeCallback(GLFWwindow* window, int width, int height) {

@@ -101,13 +101,33 @@ Engine::Shader::Shader(const char* shaderPath,const int shaderType,std::string n
 
 Engine::Renderer::Renderer(ShaderProgram *shaderProgram) {
     this->shaderProgram = shaderProgram;
+    glEnable(GL_DEPTH_TEST);
 }
-void Engine::Renderer::render(unsigned int start, unsigned int count,GLenum type,Texture* tex) {
+void Engine::Renderer::render(unsigned int start, unsigned int count,GLenum type,Texture* tex,glm::mat4 model) {
+    glm::mat4 proj =glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+    glm::mat4 view = glm::mat4(1.0f);
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+    shaderProgram->setUniformMatrix4fv("projection", proj);
+    shaderProgram->setUniformMatrix4fv("view", view);
+    shaderProgram->setUniformMatrix4fv("model",model);
     shaderProgram->use();
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex->ID);
     glBindVertexArray(VAO);
     glDrawElements(type, count, GL_UNSIGNED_INT, (void*)(start * sizeof(unsigned int)));
+}
+void Engine::Renderer::renderUDVA(unsigned int start, unsigned int count,GLenum type,Texture* tex,glm::mat4 model) {
+    glm::mat4 proj =glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+    glm::mat4 view = glm::mat4(1.0f);
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+    shaderProgram->setUniformMatrix4fv("projection", proj);
+    shaderProgram->setUniformMatrix4fv("view", view);
+    shaderProgram->setUniformMatrix4fv("model",model);
+    shaderProgram->use();
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, tex->ID);
+    glBindVertexArray(VAO);
+    glDrawArrays(type,start, count);
 }
 
 void Engine::Renderer::setVAtributes(int layout, unsigned int size, GLenum type, GLboolean normalize, unsigned int stride, unsigned int offset) {

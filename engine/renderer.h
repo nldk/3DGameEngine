@@ -80,7 +80,8 @@ namespace Engine {
         Renderer(ShaderProgram* shaderProgram);
         void loadData(float *vertex, int vertexCount, unsigned int* indices, int indexCount);
         void setVAtributes(int layout, unsigned int size, GLenum type, GLboolean normalize, unsigned int stride, unsigned int offset);
-        void render(unsigned int start, unsigned int count,GLenum type,Texture* tex);
+        void render(unsigned int start, unsigned int count,GLenum type,Texture* tex,glm::mat4 model);
+        void renderUDVA(unsigned int start, unsigned int count,GLenum type,Texture* tex,glm::mat4 model);
         private:
         unsigned int VBO;
         unsigned int VAO;

@@ -42,6 +42,7 @@ void Engine::Engine::runUpdateLoop() {
 
         if (window) {
             window->clearGLCollorBit();
+            glClear(GL_DEPTH_BUFFER_BIT);
         }
         if (currentScene) {
             currentScene->updateScene(deltaTime);
