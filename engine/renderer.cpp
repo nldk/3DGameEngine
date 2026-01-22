@@ -132,7 +132,7 @@ void Engine::Renderer::renderUDVA(unsigned int start, unsigned int count,GLenum 
 
 void Engine::Renderer::setVAtributes(int layout, unsigned int size, GLenum type, GLboolean normalize, unsigned int stride, unsigned int offset) {
     glBindVertexArray(VAO);
-    glVertexAttribPointer(layout, size, type, normalize, stride, (void*)offset);
+    glVertexAttribPointer(layout, size, type, normalize, stride, reinterpret_cast<void*>(static_cast<uintptr_t>(offset)));
     glEnableVertexAttribArray(layout);
 }
 
@@ -177,4 +177,25 @@ Engine::Texture::~Texture() {
     stbi_image_free(data);
 }
 
+Engine::Sprite2D::Sprite2D(std::string filePath) {
+    shaderProgram = Engine::Engine::Instance().defaultShaderProgram;
+    renderer = Engine::Engine::Instance().SpriteRenderer;
+    texture = new Texture(filePath,shaderProgram);
+    vertexData = generateTextureVertices(texture->width,texture->height).data();
+    renderer->loadData(vertexData,20,indices,6);
+    renderer->setVAtributes(0,3,GL_FLOAT,GL_FALSE,5 * sizeof(float),0);
+    renderer->setVAtributes(1,2,GL_FLOAT,GL_FALSE,5 * sizeof(float),3 * sizeof(float));
+    this->renderer = renderer;
+    position = glm::vec3(0.0f,0.0f,0.0f);
+    scale = glm::vec3(1.0f,1.0f,1.0f);
+    rotation = 0.0f;
+    REGISTER_UPDATE(Render);
+}
 
+void Engine::Sprite2D::Render(double deltaTime) {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, position);
+    model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
+    model = glm::scale(model, scale);
+    renderer->render(0,6,GL_TRIANGLES,texture,model);
+}

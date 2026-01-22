@@ -4,10 +4,18 @@
 #include "engine.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include "renderer.h"
 
 Engine::Engine::Engine(const std::string& path) {
     running = false;
     currentScene = new Scene(path);
+    defaultShaderProgram = new ShaderProgram();
+    Shader vshader = Shader("engine/shaders/shader.v",GL_VERTEX_SHADER,"vertex");
+    Shader fshader = Shader("engine/shaders/shader.f",GL_FRAGMENT_SHADER,"fragment");
+    defaultShaderProgram->addShader(&vshader);
+    defaultShaderProgram->addShader(&fshader);
+    defaultShaderProgram->compile();
+    SpriteRenderer = new Renderer(defaultShaderProgram);
 }
 
 auto Engine::Engine::changeCurrentScene(const std::string& path) -> void {

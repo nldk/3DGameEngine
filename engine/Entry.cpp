@@ -46,7 +46,12 @@ int main() {
         std::cout << "init class not found" << std::endl;
         throw std::runtime_error("init class not found");
     }
-    Engine::Window* win = new Engine::Window(WindowStartupConfig::width, WindowStartupConfig::height, WindowStartupConfig::title.c_str(),3,3);
+    int winW = (WindowStartupConfig::width > 0) ? WindowStartupConfig::width : WIDHT;
+    int winH = (WindowStartupConfig::height > 0) ? WindowStartupConfig::height : HEIGHT;
+    const char* title = (WindowStartupConfig::title.empty() ? "3DGameEngine" : WindowStartupConfig::title.c_str());
+    int maj = (WindowStartupConfig::gl_version_major > 0) ? WindowStartupConfig::gl_version_major : 3;
+    int min = (WindowStartupConfig::gl_version_minor > 0) ? WindowStartupConfig::gl_version_minor : 3;
+    Engine::Window* win = new Engine::Window(winW, winH, title, maj, min);
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
@@ -57,7 +62,13 @@ int main() {
     win->setGLViewport(0,0,WIDHT,HEIGHT);
     win->background = Engine::Vec4(0.2f, 0.3f, 0.3f, 1.0f);
     Engine::Engine::Instance().window = win;
-    Engine::Engine::Initialize("/home/niel/CLionProjects/Niels3DGameEngine/game/testScene.scene");
+    std::string scenePath = gamePath;
+    if (config.contains("startScene")) {
+        scenePath += config["startScene"];
+    } else {
+        scenePath += "testScene.scene";
+    }
+    Engine::Engine::Initialize(scenePath);
     Engine::Engine::Instance().start();
     Engine::Engine::Instance().runUpdateLoop();
     glfwTerminate();

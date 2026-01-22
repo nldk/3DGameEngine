@@ -9,15 +9,18 @@
 #include "utils.h"
 #include "window.h"
 #include "scene.h"
-#include "renderer.h"
 #include "stb_image.h"
 #include "glm-1.0.3/glm/glm.hpp"
 #include "glm-1.0.3/glm/gtc/matrix_transform.hpp"
 #include "glm-1.0.3/glm/gtc/type_ptr.hpp"
-const std::string gamePath = "/home/niel/CLionProjects/Niels3DGameEngine/game/";
+const std::string gamePath = "game/";
 namespace Engine {
+    class ShaderProgram;
+    class Renderer;
     class Engine {
         public:
+        ShaderProgram* defaultShaderProgram;
+        Renderer* SpriteRenderer;
         Window* window;
         static Engine& Instance() {
             static Engine instance("");

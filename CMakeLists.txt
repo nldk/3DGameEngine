@@ -1,10 +1,21 @@
-cmake_minimum_required(VERSION 4.1)
-project(Niels3DGameEngine)
+cmake_minimum_required(VERSION 3.16)
+project(Niels3DGameEngine LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+# Dependencies
+find_package(OpenGL REQUIRED)
 
-add_executable(Niels3DGameEngine game/test.cpp
+# Prefer system GLFW if available; otherwise build vendored GLFW
+find_package(glfw3 QUIET)
+if (NOT glfw3_FOUND)
+    message(STATUS "glfw3 not found; building vendored glfw-3.4")
+    add_subdirectory(glfw-3.4)
+endif ()
+
+add_executable(Niels3DGameEngine
         game/test.cpp
         glad/glad.c
         glad/glad/glad.h
@@ -23,12 +34,13 @@ add_executable(Niels3DGameEngine game/test.cpp
         engine/renderer.h
         engine/stb_image.h
 )
+
 target_include_directories(Niels3DGameEngine PRIVATE
+        ${CMAKE_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}/glad
 )
-find_package(glfw3 REQUIRED)
 
 target_link_libraries(Niels3DGameEngine
         glfw
-        GL
+        OpenGL::GL
 )

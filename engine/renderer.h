@@ -96,6 +96,42 @@ namespace Engine {
         Texture(std::string filePath, ShaderProgram* shaderProgram);
         ~Texture();
     };
+    inline std::vector<float> generateTextureVertices(float width, float height) {
+        float halfWidth = width / 2.0f;
+        float halfHeight = height / 2.0f;
+        
+        return {
+            // posities              // texture coords
+             halfWidth,  halfHeight, 0.0f,  1.0f, 1.0f,   // rechtsboven
+             halfWidth, -halfHeight, 0.0f,  1.0f, 0.0f,   // rechtsonder
+            -halfWidth, -halfHeight, 0.0f,  0.0f, 0.0f,   // linksonder
+            -halfWidth,  halfHeight, 0.0f,  0.0f, 1.0f    // linksboven
+        };
+    }
+    
+    inline std::vector<unsigned int> generateTextureIndices() {
+        return {
+            0, 1, 3,   // eerste driehoek
+            1, 2, 3    // tweede driehoek
+        };
+    }
+    
+    class Sprite2D : public System {
+        public:
+        Texture* texture;
+        glm::vec3 position;
+        glm::vec3 scale;
+        ShaderProgram* shaderProgram;
+        Renderer* renderer;
+        float rotation;
+        float* vertexData;
+        unsigned int indices[6] = {
+            0, 1, 3,
+            1, 2, 3
+        };
+        Sprite2D(std::string filePath);
+        void Render(double deltaTime);
+    };
 }
 
 #endif //NIELS3DGAMEENGINE_RENDERER_H
