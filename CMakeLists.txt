@@ -33,6 +33,10 @@ add_executable(Niels3DGameEngine
         engine/renderer.cpp
         engine/renderer.h
         engine/stb_image.h
+        engine/phisycs.cpp
+        engine/phisycs.h
+        engine/input.cpp
+        engine/input.h
 )
 
 target_include_directories(Niels3DGameEngine PRIVATE

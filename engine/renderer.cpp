@@ -104,11 +104,6 @@ Engine::Renderer::Renderer(ShaderProgram *shaderProgram) {
     glEnable(GL_DEPTH_TEST);
 }
 void Engine::Renderer::render(unsigned int start, unsigned int count,GLenum type,Texture* tex,glm::mat4 model) {
-    glm::mat4 proj =glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
-    glm::mat4 view = glm::mat4(1.0f);
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-    shaderProgram->setUniformMatrix4fv("projection", proj);
-    shaderProgram->setUniformMatrix4fv("view", view);
     shaderProgram->setUniformMatrix4fv("model",model);
     shaderProgram->use();
     glActiveTexture(GL_TEXTURE0);
@@ -117,11 +112,6 @@ void Engine::Renderer::render(unsigned int start, unsigned int count,GLenum type
     glDrawElements(type, count, GL_UNSIGNED_INT, (void*)(start * sizeof(unsigned int)));
 }
 void Engine::Renderer::renderUDVA(unsigned int start, unsigned int count,GLenum type,Texture* tex,glm::mat4 model) {
-    glm::mat4 proj =glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
-    glm::mat4 view = glm::mat4(1.0f);
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-    shaderProgram->setUniformMatrix4fv("projection", proj);
-    shaderProgram->setUniformMatrix4fv("view", view);
     shaderProgram->setUniformMatrix4fv("model",model);
     shaderProgram->use();
     glActiveTexture(GL_TEXTURE0);
@@ -161,28 +151,49 @@ Engine::Texture::Texture(std::string filePath, ShaderProgram* shaderProgram) {
         std::cout << "ERROR::STBI::LOADING_FAILED\n" << stbi_failure_reason();
         return;
     }
+    GLenum format = (nrChannels == 4) ? GL_RGBA : GL_RGB;
     glGenTextures(1, &ID);
     glBindTexture(GL_TEXTURE_2D, ID);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width,height,0,GL_RGB,GL_UNSIGNED_BYTE,data);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, sampleMode);
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width,height,0,format,GL_UNSIGNED_BYTE,data);
     glGenerateMipmap(GL_TEXTURE_2D);
     glUniform1i(glGetUniformLocation(shaderProgram->ID, "texture1"), 0);
 
+}
+
+Engine::Texture::Texture(std::string filePath, ShaderProgram *shaderProgram, GLenum sampleModePassed) {
+    sampleMode = sampleModePassed;
+    data = stbi_load(filePath.c_str(),&width,&height,&nrChannels,0);
+    if (!data) {
+        std::cout << "Error loading texture file " << filePath << std::endl;
+        std::cout << "ERROR::STBI::LOADING_FAILED\n" << stbi_failure_reason();
+        return;
+    }
+    GLenum format = (nrChannels == 4) ? GL_RGBA : GL_RGB;
+    glGenTextures(1, &ID);
+    glBindTexture(GL_TEXTURE_2D, ID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, sampleMode);
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width,height,0,format,GL_UNSIGNED_BYTE,data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glUniform1i(glGetUniformLocation(shaderProgram->ID, "texture1"), 0);
 }
 
 Engine::Texture::~Texture() {
     stbi_image_free(data);
 }
 
-Engine::Sprite2D::Sprite2D(std::string filePath) {
+Engine::Sprite2D::Sprite2D(std::string filePath,GLenum sampleMode) {
     shaderProgram = Engine::Engine::Instance().defaultShaderProgram;
     renderer = Engine::Engine::Instance().SpriteRenderer;
-    texture = new Texture(filePath,shaderProgram);
-    vertexData = generateTextureVertices(texture->width,texture->height).data();
-    renderer->loadData(vertexData,20,indices,6);
+    texture = new Texture(filePath,shaderProgram,sampleMode);
+    vertexData = generateTextureVertices(texture->width,texture->height);
+    renderer->loadData(vertexData.data(),20,indices,6);
     renderer->setVAtributes(0,3,GL_FLOAT,GL_FALSE,5 * sizeof(float),0);
     renderer->setVAtributes(1,2,GL_FLOAT,GL_FALSE,5 * sizeof(float),3 * sizeof(float));
     this->renderer = renderer;
@@ -193,9 +204,57 @@ Engine::Sprite2D::Sprite2D(std::string filePath) {
 }
 
 void Engine::Sprite2D::Render(double deltaTime) {
+    Scene* scene = Engine::Instance().getCurrentScene();
+    Camera* camera = scene->getCamera();
+
+    if (!camera) {
+        std::cout << "ERROR: No camera found in scene" << std::endl;
+        return;
+    }
+
+    glm::mat4 proj = camera->getProjectionMatrix();
+    glm::mat4 view = camera->getViewMatrix();
+
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, position);
     model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
     model = glm::scale(model, scale);
-    renderer->render(0,6,GL_TRIANGLES,texture,model);
+
+    shaderProgram->setUniformMatrix4fv("projection", proj);
+    shaderProgram->setUniformMatrix4fv("view", view);
+    shaderProgram->setUniformMatrix4fv("model", model);
+
+    // Respect texture alpha while still writing depth so nearer sprites occlude farther ones
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    renderer->render(0, 6, GL_TRIANGLES, texture, model);
+}
+
+Engine::Camera::Camera(ShaderProgram* shaderProgram) : shaderProgram(shaderProgram) {
+    position = glm::vec3(0.0f);
+    zoom = 1.0f;
+}
+
+glm::mat4 Engine::Camera::getViewMatrix() const {
+    glm::mat4 view = glm::mat4(1.0f);
+    view = glm::translate(view, -position);
+    return view;
+}
+
+glm::mat4 Engine::Camera::getProjectionMatrix() const {
+    float width = static_cast<float>(WindowStartupConfig::width);
+    float height = static_cast<float>(WindowStartupConfig::height);
+    float halfWidth = (width / 2.0f) / zoom;
+    float halfHeight = (height / 2.0f) / zoom;
+
+    return glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, -1.0f, 1.0f);
+}
+
+void Engine::Camera::setPosition(glm::vec3 newPosition) {
+    position = newPosition;
+}
+
+void Engine::Camera::setZoom(float newZoom) {
+    zoom = newZoom > 0.0f ? newZoom : 0.1f;
 }

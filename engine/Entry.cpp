@@ -17,8 +17,8 @@
 
 
 int main() {
-
     glfwInit();
+
     std::unordered_map<std::string, std::string> config;
 
     std::ifstream file(gamePath + "testGame.project");
@@ -52,14 +52,13 @@ int main() {
     int maj = (WindowStartupConfig::gl_version_major > 0) ? WindowStartupConfig::gl_version_major : 3;
     int min = (WindowStartupConfig::gl_version_minor > 0) ? WindowStartupConfig::gl_version_minor : 3;
     Engine::Window* win = new Engine::Window(winW, winH, title, maj, min);
-
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
 
-    win->setGLViewport(0,0,WIDHT,HEIGHT);
+    win->setGLViewport(0,0,winW,winH);
     win->background = Engine::Vec4(0.2f, 0.3f, 0.3f, 1.0f);
     Engine::Engine::Instance().window = win;
     std::string scenePath = gamePath;

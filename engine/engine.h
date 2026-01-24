@@ -13,6 +13,8 @@
 #include "glm-1.0.3/glm/glm.hpp"
 #include "glm-1.0.3/glm/gtc/matrix_transform.hpp"
 #include "glm-1.0.3/glm/gtc/type_ptr.hpp"
+#include "phisycs.h"
+
 const std::string gamePath = "game/";
 namespace Engine {
     class ShaderProgram;
@@ -29,6 +31,7 @@ namespace Engine {
         static void Initialize(const std::string& path) {
             Instance().changeCurrentScene(path);
         }
+        Scene* getCurrentScene() const { return currentScene; }
         ~Engine();
         void changeCurrentScene(const std::string& path);
         void runUpdateLoop();
@@ -43,6 +46,9 @@ namespace Engine {
         float deltaTime = 0.0f;
         float lastFrame = 0.0f;
     };
-};
 
+};
+#include "input.h"
+#define CREATE_AND_REGISTER(VAR_NAME) \
+    Engine::Engine::Instance().getCurrentScene()->addActiveSystem(VAR_NAME);
 #endif //NIELS3DGAMEENGINE_ENGINE_H

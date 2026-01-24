@@ -16,6 +16,10 @@ Engine::Engine::Engine(const std::string& path) {
     defaultShaderProgram->addShader(&fshader);
     defaultShaderProgram->compile();
     SpriteRenderer = new Renderer(defaultShaderProgram);
+
+    // Enable alpha blending for 2D sprites
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 auto Engine::Engine::changeCurrentScene(const std::string& path) -> void {
@@ -29,6 +33,7 @@ auto Engine::Engine::changeCurrentScene(const std::string& path) -> void {
 
 void Engine::Engine::start() {
     running = true;
+    glfwSwapInterval(WindowStartupConfig::vSync);
     currentScene->enterScene();
 }
 

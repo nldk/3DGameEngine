@@ -93,19 +93,23 @@ namespace Engine {
         unsigned int ID;
         int width, height, nrChannels;
         unsigned char *data;
+        GLenum sampleMode = GL_LINEAR;
+        void bind() const {
+            glBindTexture(GL_TEXTURE_2D, ID);
+        }
+        Texture(std::string filePath, ShaderProgram* shaderProgram, GLenum sampleMode);
         Texture(std::string filePath, ShaderProgram* shaderProgram);
         ~Texture();
     };
     inline std::vector<float> generateTextureVertices(float width, float height) {
-        float halfWidth = width / 2.0f;
-        float halfHeight = height / 2.0f;
-        
+        // Normalize to 1x1 units regardless of texture dimensions
+        // This allows scale to control actual size in pixels
         return {
             // posities              // texture coords
-             halfWidth,  halfHeight, 0.0f,  1.0f, 1.0f,   // rechtsboven
-             halfWidth, -halfHeight, 0.0f,  1.0f, 0.0f,   // rechtsonder
-            -halfWidth, -halfHeight, 0.0f,  0.0f, 0.0f,   // linksonder
-            -halfWidth,  halfHeight, 0.0f,  0.0f, 1.0f    // linksboven
+             0.5f,  0.5f, 0.0f,  1.0f, 1.0f,   // rechtsboven
+             0.5f, -0.5f, 0.0f,  1.0f, 0.0f,   // rechtsonder
+            -0.5f, -0.5f, 0.0f,  0.0f, 0.0f,   // linksonder
+            -0.5f,  0.5f, 0.0f,  0.0f, 1.0f    // linksboven
         };
     }
     
@@ -116,7 +120,7 @@ namespace Engine {
         };
     }
     
-    class Sprite2D : public System {
+    class Sprite2D : virtual public System {
         public:
         Texture* texture;
         glm::vec3 position;
@@ -124,14 +128,73 @@ namespace Engine {
         ShaderProgram* shaderProgram;
         Renderer* renderer;
         float rotation;
-        float* vertexData;
+        std::vector<float> vertexData;
         unsigned int indices[6] = {
             0, 1, 3,
             1, 2, 3
         };
-        Sprite2D(std::string filePath);
+        Sprite2D(std::string filePath, GLenum sampleMode = GL_LINEAR);
         void Render(double deltaTime);
+        void setZForOrdering(float z) {
+            position.z = z;
+        }
     };
-}
+    class Camera : public System {
+        public:
+        glm::vec3 position;
+        float zoom;
+        ShaderProgram* shaderProgram;
 
-#endif //NIELS3DGAMEENGINE_RENDERER_H
+        Camera(ShaderProgram* shaderProgram);
+
+        glm::mat4 getViewMatrix() const;
+        glm::mat4 getProjectionMatrix() const;
+
+        void setPosition(glm::vec3 newPosition);
+        void setZoom(float newZoom);
+    };
+
+    // Convert screen-space (top-left origin) to world-space (center origin, Y up) for the active camera
+    inline glm::vec2 screenToWorld(const glm::vec2& screenPos) {
+        Scene* scene = Engine::Engine::Instance().getCurrentScene();
+        Camera* camera = scene ? scene->getCamera() : nullptr;
+        if (!camera) return glm::vec2(0.0f);
+
+        const float width = static_cast<float>(WindowStartupConfig::width);
+        const float height = static_cast<float>(WindowStartupConfig::height);
+        const float halfWidth = (width * 0.5f) / camera->zoom;
+        const float halfHeight = (height * 0.5f) / camera->zoom;
+
+        // Screen to normalized device coords (-1..1), flipping Y
+        const float xNdc = (screenPos.x / width) * 2.0f - 1.0f;
+        const float yNdc = 1.0f - (screenPos.y / height) * 2.0f;
+
+        return glm::vec2(
+            xNdc * halfWidth + camera->position.x,
+            yNdc * halfHeight + camera->position.y
+        );
+    }
+    class PhisicsSprite2D : public PhysicsObject2D, public Sprite2D {
+    public:
+        PhisicsSprite2D(std::string filePath, GLenum sampleMode) : PhysicsObject2D(0,0,glm::vec3(0.0f)), Sprite2D(filePath,sampleMode) {
+            width = texture->width;
+            height = texture->height;
+            REGISTER_UPDATE(Update);
+        }
+        void Update(double deltaTime) {
+            Sprite2D::position = PhysicsObject2D::position;
+        }
+        void setPosition(glm::vec2 newPosition) {
+            PhysicsObject2D::position = glm::vec3(newPosition, 0.0f);
+            Sprite2D::position = glm::vec3(newPosition, 0.0f);
+        }
+        glm::vec2 getPositionOfP() {
+            return glm::vec2(PhysicsObject2D::position.x, PhysicsObject2D::position.y);
+        }
+        glm::vec2 getPositionOfS() {
+            return glm::vec2(Sprite2D::position.x, Sprite2D::position.y);
+        }
+    };
+ }
+
+ #endif //NIELS3DGAMEENGINE_RENDERER_H

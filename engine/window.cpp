@@ -23,6 +23,7 @@ Engine::Window::Window(int width, int height, const char *title, int gl_version_
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
     glfwSetWindowUserPointer(window, this);
+    glfwSetScrollCallback(window, scroll_callback);
 }
 
 void Engine::Window::update() {
@@ -44,6 +45,8 @@ void Engine::Window::setGLViewport(int x, int y, int width, int height) {
     glViewport(x,y,width,height);
 }
 void Engine::Window::resize(int x,int y, int width,int height) {
+    WindowStartupConfig::width = width;
+    WindowStartupConfig::height = height;
     this->setGLViewport(x,y,width,height);
 }
 
@@ -60,11 +63,10 @@ void Engine::Window::clearGLCollorBit() {
     glClear(GL_COLOR_BUFFER_BIT);
 }
 int WindowStartupConfig::width,WindowStartupConfig::height;
-
 std::string WindowStartupConfig::title;
 int WindowStartupConfig::gl_version_major,WindowStartupConfig::gl_version_minor;
-WindowStartupConfig::WindowStartupConfig(int width, int height, std::string title) {
-    width = width;
-    height = height;
-    title = title;
+bool WindowStartupConfig::vSync = true;
+
+bool Engine::Window::isMouseButtonPressed(int key) {
+    return glfwGetMouseButton(window, key) == GLFW_PRESS;
 }

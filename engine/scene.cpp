@@ -3,10 +3,12 @@
 //
 
 #include "scene.h"
+#include "renderer.h"
+#include "engine.h"
 #include <fstream>
 #include <iostream>
 
-Engine::Scene::Scene(const std::string& scenePath) {
+Engine::Scene::Scene(const std::string& scenePath) : camera(nullptr) {
     // assign the incoming path to the member variable
     std::cout << "Scene created with path " << scenePath << "\n";
     if (scenePath.empty()) {
@@ -25,8 +27,8 @@ Engine::Scene::Scene(const std::string& scenePath) {
     while (std::getline(file, line)) { // Read line by line
         sceneClasses.push_back(line);
     }
-
     file.close();
+    initCamera();
 }
 
 void Engine::Scene::enterScene() {
@@ -40,8 +42,9 @@ void Engine::Scene::enterScene() {
     }
 }
 void Engine::Scene::updateScene(double delta) {
-    for (auto& sys: activeSystems) {
-        sys->RunUpdates(delta);
+    // Use index-based loop so activeSystems can grow during iteration without invalidating references
+    for (size_t i = 0; i < activeSystems.size(); ++i) {
+        activeSystems[i]->RunUpdates(delta);
     }
 }
 void Engine::Scene::exitScene() {
@@ -49,4 +52,9 @@ void Engine::Scene::exitScene() {
         delete sys;
     }
     activeSystems.clear();
+}
+void Engine::Scene::initCamera() {
+    if (!camera) {
+        camera = new Camera(Engine::Engine::Instance().defaultShaderProgram);
+    }
 }

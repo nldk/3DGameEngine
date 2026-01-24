@@ -7,14 +7,28 @@
 class Init : public System {
 public:
     Init() {
-        WindowStartupConfig::width = 500;
-        WindowStartupConfig::height = 500;
+        WindowStartupConfig::width = 1000;
+        WindowStartupConfig::height = 1000;
         WindowStartupConfig::title = "test";
         WindowStartupConfig::gl_version_major = 3;
         WindowStartupConfig::gl_version_minor = 3;
+        WindowStartupConfig::vSync = true;
     }
 };
 REGISTER_CLASS(Init);
+/*
+class SceneCamera : public Engine::Camera {
+public:
+    SceneCamera() : Engine::Camera(Engine::Engine::Instance().defaultShaderProgram) {
+        Engine::Scene* scene = Engine::Engine::Instance().getCurrentScene();
+        if (scene) {
+            scene->setCamera(this);
+        }
+        position = glm::vec3(0.0f, 0.0f, 0.0f);
+        zoom = 1.0f;
+    }
+};
+REGISTER_CLASS(SceneCamera);
 
 class TestRenderer : public System {
     Engine::Shader* vshader;
@@ -102,12 +116,39 @@ class TestRenderer : public System {
 
 };
 //REGISTER_CLASS(TestRenderer);
-class Test2DSprite : public Engine::Sprite2D {
+*/
+class Player : public Engine::PhisicsSprite2D {
 public:
-    Test2DSprite() : Engine::Sprite2D("game/assets/container.jpg") {
-        position = glm::vec3(0.0f,0.0f,0.0f);
-        scale = glm::vec3(1.0f,1.0f,1.0f);
-        rotation = 0.0f;
+    Engine::Camera* camera;
+    Player() : PhisicsSprite2D("game/assets/character_pink_front.png",GL_NEAREST) {
+        setPosition(glm::vec2(0.0f,0.0f));
+        scale = glm::vec3(100.0f, 100.0f, 1.0f);
+        rotation = 180.0f;
+        setIsAffectedByGravity(true);
+        REGISTER_UPDATE(Update);
+        camera = Engine::Engine::Instance().getCurrentScene()->getCamera();
+    }
+    void Update(double delta) {
+        std::cout << "SpritePos " <<Sprite2D::position.x << " "<< Sprite2D::position.y << std::endl;
+        std::cout << "PhysicsObject pos"<<PhysicsObject2D::position.x << " "<< PhysicsObject2D::position.y << std::endl;
+        if (Engine::isKeyPressed(GLFW_KEY_SPACE) && velocity.y <= 0.0f) {
+            velocity.y = 100.0f;
+        }
+        camera->setPosition(glm::vec3(getPositionOfS(),0.0f));
     }
 };
-REGISTER_CLASS(Test2DSprite);
+REGISTER_CLASS(Player);
+class randomObject : public Engine::Sprite2D {
+public:
+    randomObject() : Sprite2D("game/assets/container.jpg",GL_LINEAR) {
+        position = glm::vec3(50.0f,0.0f,-0.1f);
+        scale = glm::vec3(100.0f,100.0f,1.0f);
+        rotation = 0.0f;
+        REGISTER_UPDATE(Update);
+    }
+    void Update(double delta) {
+        //std::cout << "randomObject pos "<<position.x << " "<< position.y << std::endl;
+    }
+};
+REGISTER_CLASS(randomObject);
+

@@ -8,6 +8,8 @@
 #include <unordered_map>
 #include <string>
 #include <functional>
+#include <iostream>
+#include <stdexcept>
 
 class System {
 public:
@@ -39,7 +41,16 @@ public:
     }
 
     System* Create(const std::string& name) {
-        return factories[name]();
+        try {
+            return factories[name]();
+        }catch (const std::exception& e) {
+            std::cerr << "Standard exception: " << e.what() << std::endl;
+            std::exit(500);
+        }catch (...) {
+            std::cerr << "Unknown exception occurred" << std::endl;
+            std::exit(400);
+        }
+
     }
 
 private:
@@ -58,8 +69,8 @@ static ClassRegistrar _registrar_##TYPE(                  \
 []() -> System* { return new TYPE(); }                \
 )
 
-#define REGISTER_UPDATE(FN)                                      \
-updateVec.push_back(                                           \
-[this](double dt) { this->FN(dt); }                        \
+#define REGISTER_UPDATE(FN)\
+updateVec.push_back(\
+[this](double dt) { this->FN(dt); }\
 )
 #endif //NIELS3DGAMEENGINE_CLASSREGISTARION_H
