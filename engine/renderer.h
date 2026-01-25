@@ -6,7 +6,6 @@
 #define NIELS3DGAMEENGINE_RENDERER_H
 
 #include <glad/glad.h>
-#include "engine.h"
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -15,9 +14,17 @@
 #include "glm-1.0.3/glm/glm.hpp"
 #include  "glm-1.0.3/glm/gtc/matrix_transform.hpp"
 #include "glm-1.0.3/glm/gtc/type_ptr.hpp"
+#include "classRegistarion.h"
+#include "engine.h"
+#include "window.h"
 
 namespace Engine {
+    // Forward declarations
     class Texture;
+    class PhysicsObject2D;
+    class Engine;
+    class Scene;
+
     class Shader {
     public:
         unsigned int shader;
@@ -99,6 +106,8 @@ namespace Engine {
         }
         Texture(std::string filePath, ShaderProgram* shaderProgram, GLenum sampleMode);
         Texture(std::string filePath, ShaderProgram* shaderProgram);
+        Texture(std::string filePath) : Texture(filePath, Engine::Engine::Instance().defaultShaderProgram) {};
+        Texture(std::string filePath, GLenum sampleMode) : Texture(filePath, Engine::Instance().defaultShaderProgram, sampleMode) {};
         ~Texture();
     };
     inline std::vector<float> generateTextureVertices(float width, float height) {
@@ -134,6 +143,8 @@ namespace Engine {
             1, 2, 3
         };
         Sprite2D(std::string filePath, GLenum sampleMode = GL_LINEAR);
+        Sprite2D(GLenum sampleMode = GL_LINEAR);
+        void setTexture(Texture* tex);
         void Render(double deltaTime);
         void setZForOrdering(float z) {
             position.z = z;
@@ -155,46 +166,10 @@ namespace Engine {
     };
 
     // Convert screen-space (top-left origin) to world-space (center origin, Y up) for the active camera
-    inline glm::vec2 screenToWorld(const glm::vec2& screenPos) {
-        Scene* scene = Engine::Engine::Instance().getCurrentScene();
-        Camera* camera = scene ? scene->getCamera() : nullptr;
-        if (!camera) return glm::vec2(0.0f);
+    glm::vec2 screenToWorld(const glm::vec2& screenPos);
+}
 
-        const float width = static_cast<float>(WindowStartupConfig::width);
-        const float height = static_cast<float>(WindowStartupConfig::height);
-        const float halfWidth = (width * 0.5f) / camera->zoom;
-        const float halfHeight = (height * 0.5f) / camera->zoom;
+// Include these at the end to avoid circular dependencies
+#include "engine.h"
 
-        // Screen to normalized device coords (-1..1), flipping Y
-        const float xNdc = (screenPos.x / width) * 2.0f - 1.0f;
-        const float yNdc = 1.0f - (screenPos.y / height) * 2.0f;
-
-        return glm::vec2(
-            xNdc * halfWidth + camera->position.x,
-            yNdc * halfHeight + camera->position.y
-        );
-    }
-    class PhisicsSprite2D : public PhysicsObject2D, public Sprite2D {
-    public:
-        PhisicsSprite2D(std::string filePath, GLenum sampleMode) : PhysicsObject2D(0,0,glm::vec3(0.0f)), Sprite2D(filePath,sampleMode) {
-            width = texture->width;
-            height = texture->height;
-            REGISTER_UPDATE(Update);
-        }
-        void Update(double deltaTime) {
-            Sprite2D::position = PhysicsObject2D::position;
-        }
-        void setPosition(glm::vec2 newPosition) {
-            PhysicsObject2D::position = glm::vec3(newPosition, 0.0f);
-            Sprite2D::position = glm::vec3(newPosition, 0.0f);
-        }
-        glm::vec2 getPositionOfP() {
-            return glm::vec2(PhysicsObject2D::position.x, PhysicsObject2D::position.y);
-        }
-        glm::vec2 getPositionOfS() {
-            return glm::vec2(Sprite2D::position.x, Sprite2D::position.y);
-        }
-    };
- }
-
- #endif //NIELS3DGAMEENGINE_RENDERER_H
+#endif //NIELS3DGAMEENGINE_RENDERER_H

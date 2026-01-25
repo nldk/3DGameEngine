@@ -10,6 +10,7 @@
 #include <functional>
 #include <iostream>
 #include <stdexcept>
+#include <vector>
 
 class System {
 public:
@@ -41,18 +42,25 @@ public:
     }
 
     System* Create(const std::string& name) {
+        auto it = factories.find(name);
+        if (it == factories.end()) {
+            std::cerr << "ClassRegistry error: factory not found for '" << name << "'" << std::endl;
+            return nullptr;
+        }
         try {
-            return factories[name]();
-        }catch (const std::exception& e) {
+            return it->second();
+        } catch (const std::exception& e) {
             std::cerr << "Standard exception: " << e.what() << std::endl;
-            std::exit(500);
-        }catch (...) {
+            return nullptr;
+        } catch (...) {
             std::cerr << "Unknown exception occurred" << std::endl;
-            std::exit(400);
+            return nullptr;
         }
 
     }
-
+    const std::unordered_map<std::string, FactoryFn>& getRegisteredFactories() const {
+        return factories;
+    };
 private:
     std::unordered_map<std::string, FactoryFn> factories;
 };
@@ -73,4 +81,17 @@ static ClassRegistrar _registrar_##TYPE(                  \
 updateVec.push_back(\
 [this](double dt) { this->FN(dt); }\
 )
+namespace Engine {
+    inline std::vector<System*> getRegisteredClasses(const std::string& name) {
+        std::vector<System*> result;
+        for (const auto & pair : ClassRegistry::Instance().getRegisteredFactories()) {
+            if (pair.first == name) {
+                System* instance = pair.second();
+                result.push_back(instance);
+            }
+        }
+        return result;
+    }
+}
+
 #endif //NIELS3DGAMEENGINE_CLASSREGISTARION_H

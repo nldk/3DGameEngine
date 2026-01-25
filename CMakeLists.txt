@@ -7,7 +7,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Dependencies
 find_package(OpenGL REQUIRED)
-
+find_package(SFML 2.5 COMPONENTS audio system REQUIRED)
 # Prefer system GLFW if available; otherwise build vendored GLFW
 find_package(glfw3 QUIET)
 if (NOT glfw3_FOUND)
@@ -37,6 +37,9 @@ add_executable(Niels3DGameEngine
         engine/phisycs.h
         engine/input.cpp
         engine/input.h
+        engine/soundEngine.cpp
+        engine/soundEngine.h
+        engine/Engine.h
 )
 
 target_include_directories(Niels3DGameEngine PRIVATE
@@ -47,4 +50,6 @@ target_include_directories(Niels3DGameEngine PRIVATE
 target_link_libraries(Niels3DGameEngine
         glfw
         OpenGL::GL
+        sfml-system
+        sfml-audio
 )

@@ -3,6 +3,8 @@
 
 #include "../engine/engine.h"
 #include "../engine/renderer.h"
+#include "../engine/phisycs.h"
+#include "engine/soundEngine.h"
 
 class Init : public System {
 public:
@@ -117,20 +119,52 @@ class TestRenderer : public System {
 };
 //REGISTER_CLASS(TestRenderer);
 */
+class TestTilemap : public Engine::TileMap2D {
+public:
+    TestTilemap() : Engine::TileMap2D(64,64) {
+        Engine::Texture* tileTexture = new Engine::Texture("game/assets/terrain_dirt_cloud_left.png",GL_NEAREST);
+        addTexture(tileTexture);
+        Engine::Texture* tileTexture2 = new Engine::Texture("game/assets/terrain_dirt_cloud_middle.png",GL_NEAREST);
+        addTexture(tileTexture2);
+        Engine::Texture* tileTexture3 = new Engine::Texture("game/assets/terrain_dirt_cloud_right.png",GL_NEAREST);
+        addTexture(tileTexture3);
+        loadTileMap("game/tilemap.tilemap");
+        for (auto &tile : tiles) {
+            tile->isGround = true;
+        }
+    }
+};
+REGISTER_CLASS(TestTilemap);
 class Player : public Engine::PhisicsSprite2D {
 public:
     Engine::Camera* camera;
-    Player() : PhisicsSprite2D("game/assets/character_pink_front.png",GL_NEAREST) {
-        setPosition(glm::vec2(0.0f,0.0f));
-        scale = glm::vec3(100.0f, 100.0f, 1.0f);
-        rotation = 180.0f;
-        setIsAffectedByGravity(true);
-        REGISTER_UPDATE(Update);
-        camera = Engine::Engine::Instance().getCurrentScene()->getCamera();
-    }
+    Engine::TileMap2D* tilemap = nullptr;
+        Player() : PhisicsSprite2D("game/assets/character_pink_front.png",GL_NEAREST) {
+        auto regs = Engine::getRegisteredClasses("TestTilemap");
+        if (!regs.empty() && regs[0] != nullptr) {
+            tilemap = dynamic_cast<Engine::TileMap2D*>(regs[0]);
+        } else {
+            std::cerr << "Error: TestTilemap not registered or factory failed" << std::endl;
+        }
+        if (tilemap) {
+            for (auto* tile : tilemap->tiles) {
+                if (tile) {
+                    physicsObjectsToCheck.push_back(tile);
+                }
+            }
+        } else {
+            std::cerr << "Error: TestTilemap is not a TileMap2D" << std::endl;
+        }
+         setPosition(glm::vec2(0.0f,0.0f));
+         scale = glm::vec3(100.0f, 100.0f, 1.0f);
+         rotation = 0.0f;
+         setIsAffectedByGravity(true);
+         REGISTER_UPDATE(Update);
+         camera = Engine::Engine::Instance().getCurrentScene()->getCamera();
+     }
     void Update(double delta) {
-        std::cout << "SpritePos " <<Sprite2D::position.x << " "<< Sprite2D::position.y << std::endl;
-        std::cout << "PhysicsObject pos"<<PhysicsObject2D::position.x << " "<< PhysicsObject2D::position.y << std::endl;
+        //std::cout << "SpritePos " <<Sprite2D::position.x << " "<< Sprite2D::position.y << std::endl;
+        //std::cout << "PhysicsObject pos"<<PhysicsObject2D::position.x << " "<< PhysicsObject2D::position.y << std::endl;
         if (Engine::isKeyPressed(GLFW_KEY_SPACE) && velocity.y <= 0.0f) {
             velocity.y = 100.0f;
         }
@@ -138,17 +172,11 @@ public:
     }
 };
 REGISTER_CLASS(Player);
-class randomObject : public Engine::Sprite2D {
+class AudioTest: public Engine::AudioPlayerG {
 public:
-    randomObject() : Sprite2D("game/assets/container.jpg",GL_LINEAR) {
-        position = glm::vec3(50.0f,0.0f,-0.1f);
-        scale = glm::vec3(100.0f,100.0f,1.0f);
-        rotation = 0.0f;
+    AudioTest() : Engine::AudioPlayerG("game/assets/music.mp3", false) {
+        playSound(2);
         REGISTER_UPDATE(Update);
     }
-    void Update(double delta) {
-        //std::cout << "randomObject pos "<<position.x << " "<< position.y << std::endl;
-    }
 };
-REGISTER_CLASS(randomObject);
-
+REGISTER_CLASS(AudioTest);

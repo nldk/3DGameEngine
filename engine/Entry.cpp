@@ -67,6 +67,7 @@ int main() {
     } else {
         scenePath += "testScene.scene";
     }
+    stbi_set_flip_vertically_on_load(true);
     Engine::Engine::Initialize(scenePath);
     Engine::Engine::Instance().start();
     Engine::Engine::Instance().runUpdateLoop();

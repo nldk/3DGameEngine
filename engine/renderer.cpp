@@ -3,6 +3,8 @@
 //
 
 #include "renderer.h"
+#include "stb_image.h"
+#include "scene.h"
 void Engine::Shader::checkCompileErrors(unsigned int shader, std::string type)
 {
     int success;
@@ -192,18 +194,18 @@ Engine::Sprite2D::Sprite2D(std::string filePath,GLenum sampleMode) {
     shaderProgram = Engine::Engine::Instance().defaultShaderProgram;
     renderer = Engine::Engine::Instance().SpriteRenderer;
     texture = new Texture(filePath,shaderProgram,sampleMode);
-    vertexData = generateTextureVertices(texture->width,texture->height);
-    renderer->loadData(vertexData.data(),20,indices,6);
-    renderer->setVAtributes(0,3,GL_FLOAT,GL_FALSE,5 * sizeof(float),0);
-    renderer->setVAtributes(1,2,GL_FLOAT,GL_FALSE,5 * sizeof(float),3 * sizeof(float));
-    this->renderer = renderer;
     position = glm::vec3(0.0f,0.0f,0.0f);
     scale = glm::vec3(1.0f,1.0f,1.0f);
     rotation = 0.0f;
+    setTexture(texture);
     REGISTER_UPDATE(Render);
 }
 
 void Engine::Sprite2D::Render(double deltaTime) {
+    if (!texture) {
+        std::cout << "Sprite2D::Render skipped: texture not set" << std::endl;
+        return;
+    }
     Scene* scene = Engine::Instance().getCurrentScene();
     Camera* camera = scene->getCamera();
 
@@ -257,4 +259,27 @@ void Engine::Camera::setPosition(glm::vec3 newPosition) {
 
 void Engine::Camera::setZoom(float newZoom) {
     zoom = newZoom > 0.0f ? newZoom : 0.1f;
+}
+
+Engine::Sprite2D::Sprite2D(GLenum sampleMode) {
+    shaderProgram = Engine::Engine::Instance().defaultShaderProgram;
+    renderer = Engine::Engine::Instance().SpriteRenderer;
+    texture = nullptr;
+    position = glm::vec3(0.0f,0.0f,0.0f);
+    scale = glm::vec3(1.0f,1.0f,1.0f);
+    rotation = 0.0f;
+}
+
+void Engine::Sprite2D::setTexture(Texture* tex) {
+    texture = tex;
+    if (!renderer) {
+        renderer = Engine::Engine::Instance().SpriteRenderer;
+    }
+    if (!texture) {
+        return;
+    }
+    vertexData = generateTextureVertices(texture->width,texture->height);
+    renderer->loadData(vertexData.data(),20,indices,6);
+    renderer->setVAtributes(0,3,GL_FLOAT,GL_FALSE,5 * sizeof(float),0);
+    renderer->setVAtributes(1,2,GL_FLOAT,GL_FALSE,5 * sizeof(float),3 * sizeof(float));
 }
