@@ -9,8 +9,8 @@
 class Init : public System {
 public:
     Init() {
-        WindowStartupConfig::width = 500;
-        WindowStartupConfig::height = 500;
+        WindowStartupConfig::width = 1000;
+        WindowStartupConfig::height = 1000;
         WindowStartupConfig::title = "test";
         WindowStartupConfig::gl_version_major = 3;
         WindowStartupConfig::gl_version_minor = 3;
