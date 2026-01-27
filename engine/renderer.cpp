@@ -5,6 +5,7 @@
 #include "renderer.h"
 #include "stb_image.h"
 #include "scene.h"
+#include "phisycs.h"
 void Engine::Shader::checkCompileErrors(unsigned int shader, std::string type)
 {
     int success;
@@ -190,6 +191,77 @@ Engine::Texture::~Texture() {
     stbi_image_free(data);
 }
 
+Engine::DebugRenderer2D::DebugRenderer2D(ShaderProgram* shaderProgram) : shaderProgram(shaderProgram) {}
+
+Engine::DebugRenderer2D::~DebugRenderer2D() {
+    // Avoid GL deletes after the context is gone (happens during shutdown).
+    if (glfwGetCurrentContext() == nullptr) {
+        VBO = EBO = VAO = 0;
+        return;
+    }
+    if (VBO) glDeleteBuffers(1, &VBO);
+    if (EBO) glDeleteBuffers(1, &EBO);
+    if (VAO) glDeleteVertexArrays(1, &VAO);
+    VBO = EBO = VAO = 0;
+}
+
+void Engine::DebugRenderer2D::ensureBuffers() {
+    if (VAO != 0) return;
+    const std::vector<float> verts = generateTextureVertices(1.0f, 1.0f);
+    const std::vector<unsigned int> idx = generateTextureIndices();
+
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * verts.size(), verts.data(), GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * idx.size(), idx.data(), GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+}
+
+void Engine::DebugRenderer2D::drawHitboxes(const std::vector<WorldHitbox2D>& boxes, const Camera& camera, const glm::vec4& color) {
+    if (boxes.empty() || !shaderProgram) return;
+    ensureBuffers();
+
+    shaderProgram->use();
+    shaderProgram->setUniformMatrix4fv("projection", camera.getProjectionMatrix());
+    shaderProgram->setUniformMatrix4fv("view", camera.getViewMatrix());
+    shaderProgram->setVec2("uFlip", glm::vec2(0.0f));
+    shaderProgram->setBool("debugOverride", true);
+    shaderProgram->setVec4("debugColor", color);
+
+    GLboolean depthWasEnabled = glIsEnabled(GL_DEPTH_TEST);
+    if (depthWasEnabled) {
+        glDisable(GL_DEPTH_TEST);
+    }
+    GLint prevPolygonMode[2];
+    glGetIntegerv(GL_POLYGON_MODE, prevPolygonMode);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+    glBindVertexArray(VAO);
+    for (const auto& hb : boxes) {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(hb.center, 0.0f));
+        model = glm::scale(model, glm::vec3(hb.halfExtents.x * 2.0f, hb.halfExtents.y * 2.0f, 1.0f));
+        shaderProgram->setUniformMatrix4fv("model", model);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+    }
+
+    glPolygonMode(GL_FRONT_AND_BACK, prevPolygonMode[0]);
+    shaderProgram->setBool("debugOverride", false);
+    if (depthWasEnabled) {
+        glEnable(GL_DEPTH_TEST);
+    }
+}
+
 Engine::Sprite2D::Sprite2D(std::string filePath,GLenum sampleMode) {
     shaderProgram = Engine::Engine::Instance().defaultShaderProgram;
     renderer = Engine::Engine::Instance().SpriteRenderer;
@@ -225,12 +297,24 @@ void Engine::Sprite2D::Render(double deltaTime) {
     shaderProgram->setUniformMatrix4fv("projection", proj);
     shaderProgram->setUniformMatrix4fv("view", view);
     shaderProgram->setUniformMatrix4fv("model", model);
+    shaderProgram->setVec2("uFlip", glm::vec2(flipX ? 1.0f : 0.0f, flipY ? 1.0f : 0.0f));
 
     // Respect texture alpha while still writing depth so nearer sprites occlude farther ones
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    // Temporarily disable depth testing for 2D sprite pass to avoid being hidden by tile depth writes
+    GLboolean depthWasEnabled = glIsEnabled(GL_DEPTH_TEST);
+    if (depthWasEnabled) {
+        glDisable(GL_DEPTH_TEST);
+    }
+
+    shaderProgram->setBool("debugOverride", false);
     renderer->render(0, 6, GL_TRIANGLES, texture, model);
+
+    if (depthWasEnabled) {
+        glEnable(GL_DEPTH_TEST);
+    }
 }
 
 Engine::Camera::Camera(ShaderProgram* shaderProgram) : shaderProgram(shaderProgram) {
@@ -268,6 +352,7 @@ Engine::Sprite2D::Sprite2D(GLenum sampleMode) {
     position = glm::vec3(0.0f,0.0f,0.0f);
     scale = glm::vec3(1.0f,1.0f,1.0f);
     rotation = 0.0f;
+    REGISTER_UPDATE(Render);
 }
 
 void Engine::Sprite2D::setTexture(Texture* tex) {

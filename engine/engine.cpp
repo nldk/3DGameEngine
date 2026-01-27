@@ -16,6 +16,10 @@ Engine::Engine::Engine(const std::string& path) {
     defaultShaderProgram->addShader(&fshader);
     defaultShaderProgram->compile();
     SpriteRenderer = new Renderer(defaultShaderProgram);
+    debugHitboxRenderer = new DebugRenderer2D(defaultShaderProgram);
+#ifndef NDEBUG
+    debugDrawHitboxes = true;
+#endif
 
     // Enable alpha blending for 2D sprites
     glEnable(GL_BLEND);
@@ -23,18 +27,25 @@ Engine::Engine::Engine(const std::string& path) {
 }
 
 auto Engine::Engine::changeCurrentScene(const std::string& path) -> void {
-    running = false;
-    Scene* newScene = new Scene(path);
-    delete currentScene;
-    currentScene = newScene;
-    running = true;
-    currentScene->enterScene();
+    // If we are not running yet (initial load), swap immediately.
+    if (!running) {
+        Scene* newScene = new Scene(path);
+        delete currentScene;
+        currentScene = newScene;
+        return;
+    }
+    // Defer hot scene switches until the end of the frame to avoid
+    // destroying systems while they are mid-update.
+    pendingScenePath = path;
+    sceneChangeRequested = true;
 }
 
 void Engine::Engine::start() {
     running = true;
     glfwSwapInterval(WindowStartupConfig::vSync);
-    currentScene->enterScene();
+    if (currentScene) {
+        currentScene->enterScene();
+    }
 }
 
 void Engine::Engine::exit() {
@@ -43,6 +54,12 @@ void Engine::Engine::exit() {
 }
 
 Engine::Engine::~Engine() {
+    delete debugHitboxRenderer;
+    debugHitboxRenderer = nullptr;
+    delete SpriteRenderer;
+    SpriteRenderer = nullptr;
+    delete defaultShaderProgram;
+    defaultShaderProgram = nullptr;
     delete currentScene;
     currentScene = nullptr;
 }
@@ -63,5 +80,19 @@ void Engine::Engine::runUpdateLoop() {
         if (window) {
             window->update();
         }
+        if (sceneChangeRequested) {
+            Scene* newScene = new Scene(pendingScenePath);
+            delete currentScene;
+            currentScene = newScene;
+            pendingScenePath.clear();
+            sceneChangeRequested = false;
+            if (currentScene) {
+                currentScene->enterScene();
+            }
+            lastFrame = static_cast<float>(glfwGetTime());
+        }
+    }
+    for (auto& sys: currentScene->getActiveSystems()) {
+        std::cout << "active systhem"<< sys << std::endl;
     }
 }

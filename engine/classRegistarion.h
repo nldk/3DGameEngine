@@ -38,7 +38,12 @@ public:
     }
 
     void Register(const std::string& name, FactoryFn fn) {
+        auto it = factories.find(name);
+        if (it != factories.end()) {
+            std::cerr << "ClassRegistry warning: replacing factory for '" << name << "'" << std::endl;
+        }
         factories[name] = fn;
+        std::cout << "ClassRegistry::Register => " << name << " factory @" << reinterpret_cast<const void*>(&fn) << std::endl;
     }
 
     System* Create(const std::string& name) {
@@ -48,7 +53,9 @@ public:
             return nullptr;
         }
         try {
-            return it->second();
+            System* created = it->second();
+            std::cout << "ClassRegistry::Create => " << name << " instance @" << created << std::endl;
+            return created;
         } catch (const std::exception& e) {
             std::cerr << "Standard exception: " << e.what() << std::endl;
             return nullptr;

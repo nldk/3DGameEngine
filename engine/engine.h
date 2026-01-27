@@ -19,10 +19,12 @@ const std::string gamePath = "game/";
 namespace Engine {
     class ShaderProgram;
     class Renderer;
+    class DebugRenderer2D;
     class Engine {
         public:
         ShaderProgram* defaultShaderProgram;
         Renderer* SpriteRenderer;
+        DebugRenderer2D* debugHitboxRenderer;
         Window* window;
         static Engine& Instance() {
             static Engine instance("");
@@ -32,6 +34,9 @@ namespace Engine {
             Instance().changeCurrentScene(path);
         }
         Scene* getCurrentScene() const { return currentScene; }
+        DebugRenderer2D* getDebugRenderer2D() const { return debugHitboxRenderer; }
+        void setDebugDrawHitboxes(bool enabled) { debugDrawHitboxes = enabled; }
+        bool getDebugDrawHitboxes() const { return debugDrawHitboxes; }
         ~Engine();
         void changeCurrentScene(const std::string& path);
         void runUpdateLoop();
@@ -45,6 +50,9 @@ namespace Engine {
         Scene* currentScene;
         float deltaTime = 0.0f;
         float lastFrame = 0.0f;
+        bool debugDrawHitboxes = false;
+        bool sceneChangeRequested = false;
+        std::string pendingScenePath;
     };
 
 };
