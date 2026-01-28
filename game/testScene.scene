@@ -2,3 +2,5 @@ TestTilemap
 Player
 AudioTest
 killZone
+EnemySpawner
+FinishGoal

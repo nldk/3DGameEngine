@@ -4,11 +4,11 @@ project(Niels3DGameEngine LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
 # Dependencies
 find_package(OpenGL REQUIRED)
 find_package(SFML 2.5 COMPONENTS audio system REQUIRED)
-# Prefer system GLFW if available; otherwise build vendored GLFW
 find_package(glfw3 QUIET)
 if (NOT glfw3_FOUND)
     message(STATUS "glfw3 not found; building vendored glfw-3.4")
@@ -18,7 +18,7 @@ endif ()
 add_executable(Niels3DGameEngine
         game/test.cpp
         glad/glad.c
-        glad/glad/glad.h
+        glad/glad.h
         glfw-3.4/include/GLFW/glfw3.h
         engine/window.cpp
         engine/window.h

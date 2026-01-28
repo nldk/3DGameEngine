@@ -27,11 +27,15 @@ Engine::Engine::Engine(const std::string& path) {
 }
 
 auto Engine::Engine::changeCurrentScene(const std::string& path) -> void {
+    std::cout << "changeCurrentScene called with path: '" << path << "'\n";
     // If we are not running yet (initial load), swap immediately.
     if (!running) {
         Scene* newScene = new Scene(path);
         delete currentScene;
         currentScene = newScene;
+        if (currentScene && !currentScene->getCamera()) {
+            currentScene->initCamera();
+        }
         return;
     }
     // Defer hot scene switches until the end of the frame to avoid
@@ -84,6 +88,9 @@ void Engine::Engine::runUpdateLoop() {
             Scene* newScene = new Scene(pendingScenePath);
             delete currentScene;
             currentScene = newScene;
+            if (currentScene && !currentScene->getCamera()) {
+                currentScene->initCamera();
+            }
             pendingScenePath.clear();
             sceneChangeRequested = false;
             if (currentScene) {
@@ -91,8 +98,5 @@ void Engine::Engine::runUpdateLoop() {
             }
             lastFrame = static_cast<float>(glfwGetTime());
         }
-    }
-    for (auto& sys: currentScene->getActiveSystems()) {
-        std::cout << "active systhem"<< sys << std::endl;
     }
 }

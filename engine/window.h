@@ -7,15 +7,15 @@
 #include <functional>
 #include <string>
 
-#include "../glad/glad/glad.h"
+#include "../glad/glad.h"
 #include "../glfw-3.4/include/GLFW/glfw3.h"
 #include "utils.h"
 #include "glm-1.0.3/glm/vec2.hpp"
-
+#include "glm-1.0.3/glm/vec4.hpp"
 namespace Engine {
     class Window {
         public:
-        Vec4 background = Vec4(0.0f,0.0f,0.0f,0.0f);
+        glm::vec4 background = glm::vec4(0.0f,0.0f,0.0f,0.0f);
         GLFWwindow* window;
         Window(int width, int height, const char* title,int gl_version_major, int gl_Version_minor);
         void update();

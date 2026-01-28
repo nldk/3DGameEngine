@@ -6,6 +6,7 @@
 #include "renderer.h"
 #include "engine.h"
 #include "phisycs.h"
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <typeinfo>
@@ -31,6 +32,7 @@ Engine::Scene::Scene(const std::string& scenePath) : camera(nullptr) {
     // assign the incoming path to the member variable
     std::cout << "Scene created with path " << scenePath << "\n";
     if (scenePath.empty()) {
+        std::cout << "Scene created with empty path (deferred initialization)\n";
         return;
     }
     this->scenePath = scenePath;
@@ -45,6 +47,9 @@ Engine::Scene::Scene(const std::string& scenePath) : camera(nullptr) {
     std::string line;
     while (std::getline(file, line)) { // Read line by line
         sceneClasses.push_back(line);
+    }
+    if (!file.eof() && file.fail()) {
+        std::cerr << "Error reading from file: " << this->scenePath << "\n";
     }
     file.close();
     initCamera();
@@ -66,6 +71,8 @@ void Engine::Scene::updateScene(double delta) {
         activeSystems[i]->RunUpdates(delta);
     }
 
+    processRemovals();
+
 #ifndef NDEBUG
     if (Engine::Engine::Instance().getDebugDrawHitboxes()) {
         auto* debugRenderer = Engine::Engine::Instance().getDebugRenderer2D();
@@ -86,10 +93,12 @@ void Engine::Scene::updateScene(double delta) {
 #endif
 }
 void Engine::Scene::exitScene() {
+    processRemovals();
     for (auto& sys: activeSystems) {
         delete sys;
     }
     activeSystems.clear();
+    pendingRemoval.clear();
 }
 void Engine::Scene::addActiveSystem(System* system, const std::string& name) {
     activeSystems.push_back(system);
@@ -99,8 +108,31 @@ void Engine::Scene::addActiveSystem(System* system, const std::string& name) {
     std::cout << "[Scene] Added system '" << displayName << "' @" << system << std::endl;
 #endif
 }
+void Engine::Scene::removeSystem(System* system) {
+    if (!system) return;
+    // Queue for deferred removal to avoid deleting during updates/collisions
+    if (std::find(pendingRemoval.begin(), pendingRemoval.end(), system) == pendingRemoval.end()) {
+        pendingRemoval.push_back(system);
+    }
+}
 void Engine::Scene::initCamera() {
     if (!camera) {
         camera = new Camera(Engine::Engine::Instance().defaultShaderProgram);
     }
+}
+
+void Engine::Scene::processRemovals() {
+    if (pendingRemoval.empty()) return;
+    for (auto* sys : pendingRemoval) {
+        auto it = std::find(activeSystems.begin(), activeSystems.end(), sys);
+        if (it != activeSystems.end()) {
+#ifndef NDEBUG
+            const char* typeName = typeid(**it).name();
+            std::cout << "[Scene] Removing system '" << demangle(typeName) << "' @" << *it << std::endl;
+#endif
+            delete *it;
+            activeSystems.erase(it);
+        }
+    }
+    pendingRemoval.clear();
 }

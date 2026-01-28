@@ -26,6 +26,7 @@ namespace Engine {
         void updateScene(double delta);
         void exitScene();
         void addActiveSystem(System* system, const std::string& name = "");
+        void removeSystem(System* system);
         void initCamera();
         Camera* getCamera() const { return camera; }
         void setCamera(Camera* cam) { camera = cam; }
@@ -71,11 +72,13 @@ namespace Engine {
         }
         private:
         std::vector<System*> activeSystems;
+        std::vector<System*> pendingRemoval;
         std::string scenePath;
         std::vector<std::string> sceneClasses;
         Camera* camera = nullptr;
-    };
-}
+        void processRemovals();
+      };
+  }
 
 #endif //NIELS3DGAMEENGINE_SCENE_H
 

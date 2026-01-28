@@ -6,7 +6,7 @@
 
 #include "classRegistarion.h"
 #include "engine.h"
-#include "../glad/glad/glad.h"
+#include "../glad/glad.h"
 #include "../glfw-3.4/include/GLFW/glfw3.h"
 #include "../engine/window.h"
 #include "../engine/utils.h"
@@ -14,14 +14,23 @@
 #define WIDHT 500
 #define HEIGHT 500
 
+// Define gamePath global variable (declared as extern in engine.h)
+std::string gamePath = "game/";
 
-
-int main() {
+int main(int argc, char* argv[]) {
     glfwInit();
+
+    // Initialize gamePath with executable location
+    gamePath = GetGamePath(argv[0]);
+    std::cerr << "DEBUG: gamePath = '" << gamePath << "'" << std::endl;
 
     std::unordered_map<std::string, std::string> config;
 
     std::ifstream file(gamePath + "testGame.project");
+    if (!file.is_open()) {
+        std::cerr << "Failed to open testGame.project from path: " << gamePath + "testGame.project" << std::endl;
+        return -1;
+    }
     std::string line;
 
 
@@ -34,6 +43,12 @@ int main() {
 
         config[key] = value; // O(1) average
     }
+    if (!file.eof() && file.fail()) {
+        std::cerr << "Error reading testGame.project" << std::endl;
+        file.close();
+        return -1;
+    }
+    file.close();
     std::string initFuncName;
     if (config.contains("initClass")) {
         initFuncName = config["initClass"];
@@ -59,7 +74,7 @@ int main() {
     }
 
     win->setGLViewport(0,0,winW,winH);
-    win->background = Engine::Vec4(0.2f, 0.3f, 0.3f, 1.0f);
+    win->background = glm::vec4(0.2f, 0.3f, 0.3f, 1.0f);
     Engine::Engine::Instance().window = win;
     std::string scenePath = gamePath;
     if (config.contains("startScene")) {

@@ -6,6 +6,40 @@
 #define NIELS3DGAMEENGINE_ENGINE_H
 
 #include "classRegistarion.h"
+#include <physfs.h>
+#include <filesystem>
+
+inline std::string GetGamePath(const char* argv0 = nullptr) {
+    namespace fs = std::filesystem;
+
+    if (argv0) {
+        try {
+            // Resolve the executable path from argv[0]
+            fs::path exePath = fs::absolute(argv0);
+
+            // Try: executable_dir/../game/
+            fs::path gamePathCandidate = exePath.parent_path().parent_path() / "game";
+            if (fs::exists(gamePathCandidate)) {
+                return gamePathCandidate.string() + "/";
+            }
+
+            // Fallback: executable_dir/game/
+            gamePathCandidate = exePath.parent_path() / "game";
+            if (fs::exists(gamePathCandidate)) {
+                return gamePathCandidate.string() + "/";
+            }
+        } catch (...) {
+            // If anything fails, fall through to relative path
+        }
+    }
+
+    // Final fallback: relative path (for cases like CLion)
+    return "game/";
+}
+
+// Declared here, defined in Entry.cpp
+extern std::string gamePath;
+
 #include "utils.h"
 #include "window.h"
 #include "scene.h"
@@ -15,7 +49,6 @@
 #include "glm-1.0.3/glm/gtc/type_ptr.hpp"
 #include "soundEngine.h"
 
-const std::string gamePath = "game/";
 namespace Engine {
     class ShaderProgram;
     class Renderer;
